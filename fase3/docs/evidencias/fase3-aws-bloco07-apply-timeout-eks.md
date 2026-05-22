@@ -72,3 +72,18 @@ Foram adicionados timeouts explícitos no módulo `eks`:
 Aguardar o cluster sair de `CREATING`.
 
 Se o cluster ficar `ACTIVE`, executar novo `terraform plan` e depois `terraform apply` controlado para continuar a criação do node group e finalizar a Fase 3.
+
+## Atualização após monitoramento
+
+O segundo terminal ficou consultando o status do cluster EKS a cada 2 minutos.
+
+Resultado observado:
+
+- `20:23:40` até `20:35:46`: status `CREATING`;
+- `20:37:47`: status mudou para `ACTIVE`.
+
+Conclusão:
+
+O cluster EKS foi criado com sucesso na AWS, mas demorou mais que o timeout padrão de 30 minutos do provider Terraform.
+
+O primeiro `terraform apply` não deve ser repetido usando o plano antigo. A continuação correta será feita com um novo `terraform plan`, considerando o state atual e o cluster já `ACTIVE`.
