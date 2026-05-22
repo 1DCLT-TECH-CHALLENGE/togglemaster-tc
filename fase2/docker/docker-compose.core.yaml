@@ -1,0 +1,95 @@
+services:
+  postgres-auth:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+
+  postgres-flags:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: flags_db
+      POSTGRES_USER: flags_user
+      POSTGRES_PASSWORD: flags_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_flags_data:/var/lib/postgresql/data
+
+  postgres-targeting:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: targeting_db
+      POSTGRES_USER: targeting_user
+      POSTGRES_PASSWORD: targeting_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_targeting_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  auth-service:
+    build:
+      context: ../repos/upstream/auth-service
+    environment:
+      DATABASE_URL: postgres://auth_user:auth_pass@postgres-auth:5432/auth_db?sslmode=disable
+      PORT: 8001
+      MASTER_KEY: local-master-key
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres-auth
+
+  flag-service:
+    build:
+      context: ../repos/upstream/flag-service
+    environment:
+      DATABASE_URL: postgresql://flags_user:flags_pass@postgres-flags:5432/flags_db
+      PORT: 8002
+      SERVICE_API_KEY: ${SERVICE_API_KEY:-}
+    ports:
+      - "8002:8002"
+    depends_on:
+      - postgres-flags
+
+  targeting-service:
+    build:
+      context: ../repos/upstream/targeting-service
+    environment:
+      DATABASE_URL: postgresql://targeting_user:targeting_pass@postgres-targeting:5432/targeting_db
+      PORT: 8003
+      SERVICE_API_KEY: ${SERVICE_API_KEY:-}
+    ports:
+      - "8003:8003"
+    depends_on:
+      - postgres-targeting
+
+  evaluation-service:
+    build:
+      context: ../repos/upstream/evaluation-service
+    environment:
+      PORT: 8004
+      REDIS_URL: redis:6379
+      FLAG_SERVICE_URL: http://flag-service:8002
+      TARGETING_SERVICE_URL: http://targeting-service:8003
+      SERVICE_API_KEY: ${SERVICE_API_KEY:-}
+    ports:
+      - "8004:8004"
+    depends_on:
+      - redis
+      - flag-service
+      - targeting-service
+
+volumes:
+  postgres_auth_data:
+  postgres_flags_data:
+  postgres_targeting_data:

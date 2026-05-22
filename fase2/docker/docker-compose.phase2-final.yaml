@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  localstack:
+    image: localstack/localstack:3.8.1
+    environment:
+      - SERVICES=sqs,dynamodb
+      - DEBUG=0
+    ports:
+      - "4566:4566"
+
+  auth-service:
+    build:
+      context: ../src/services/auth-service
+    ports:
+      - "8001:8001"
+
+  flag-service:
+    build:
+      context: ../src/services/flag-service
+    ports:
+      - "8002:8002"
+
+  targeting-service:
+    build:
+      context: ../src/services/targeting-service
+    ports:
+      - "8003:8003"
+
+  evaluation-service:
+    build:
+      context: ../src/services/evaluation-service
+    environment:
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    ports:
+      - "8004:8004"
+
+  analytics-service:
+    build:
+      context: ../src/services/analytics-service
+    environment:
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    ports:
+      - "8005:8005"

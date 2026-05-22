@@ -1,0 +1,106 @@
+# ============================================================
+# ToggleMaster TC - Git ignore raiz
+# ============================================================
+
+# Ambientes locais / secrets / variáveis locais
+.env
+.env.*
+*.env
+*.local
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Permitir exemplos versionáveis
+!.env.example
+!*.env.example
+!fase2/docker/.env.example
+
+# Logs e saídas geradas
+logs/
+*/logs/
+fase1/logs/
+fase2/logs/
+fase3/logs/
+fase4/logs/
+*.log
+
+# Temporários e backups
+tmp/
+*/tmp/
+fase1/tmp/
+fase2/tmp/
+fase3/tmp/
+fase4/tmp/
+*.bak
+*.bak.*
+*.backup
+*.backup.*
+*~
+
+# Backups gerados pelos scripts
+fase2/local/scripts/*.bak*
+fase2/docker/*.bak*
+fase2/src/services/**/*.bak*
+fase2/tmp/
+
+# Repositórios Git internos clonados/upstream
+fase2/repos/upstream/*/.git/
+fase2/src/services/*/.git/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Node / frontend eventual
+node_modules/
+dist/
+build/
+
+# Terraform local/state
+.terraform/
+**/.terraform/
+terraform.tfstate
+terraform.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Kubernetes/Cloud local gerado
+kubeconfig*
+*.kubeconfig
+
+# SO/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Backups com extensão bkp
+*.bkp
+*.bkp.*
+
+# Repositórios upstream clonados apenas como referência/local source
+fase1/repos/upstream/*/
+fase2/repos/upstream/*/
+
+# Backups locais gerados durante rebuild
+fase1/local/backups/
+fase2/local/backups/
+
+# Binários Go gerados acidentalmente no source tree
+fase2/src/services/auth-service/auth-service
+fase2/src/services/evaluation-service/evaluation-service
+
+# Ignorar conteúdo de upstream local em todas as fases
+fase1/repos/upstream/**
+fase2/repos/upstream/**
+fase3/repos/upstream/**
+fase4/repos/upstream/**
