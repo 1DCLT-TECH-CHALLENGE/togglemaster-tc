@@ -12,6 +12,13 @@ data "aws_iam_role" "lab_role" {
 }
 
 resource "aws_eks_cluster" "this" {
+
+  timeouts {
+    create = "75m"
+    update = "75m"
+    delete = "60m"
+  }
+
   name     = "${var.name_prefix}-eks"
   role_arn = data.aws_iam_role.lab_role.arn
   version  = var.kubernetes_version
@@ -78,6 +85,13 @@ resource "aws_launch_template" "nodes" {
 }
 
 resource "aws_eks_node_group" "default" {
+
+  timeouts {
+    create = "75m"
+    update = "75m"
+    delete = "60m"
+  }
+
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${var.name_prefix}-default-ng"
   node_role_arn   = data.aws_iam_role.lab_role.arn
