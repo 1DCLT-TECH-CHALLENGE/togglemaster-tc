@@ -1,0 +1,74 @@
+name: Phase 3 - Repository Safety Scan
+
+on:
+  pull_request:
+    paths:
+      - "_shared/**"
+      - "fase3/**"
+      - ".github/workflows/phase3-security-scan.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "_shared/**"
+      - "fase3/**"
+      - ".github/workflows/phase3-security-scan.yml"
+
+jobs:
+  safety-scan:
+    name: Scan for forbidden files and obvious secrets
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check forbidden tracked files
+        run: |
+          set -Eeuo pipefail
+
+          if git ls-files | grep -E '(^|/)(logs|tmp|\.terraform)/|\.tfstate|\.tfvars$|\.env$|\.bak|\.bkp'; then
+            echo "Forbidden local/generated file is tracked."
+            exit 1
+          fi
+
+          echo "OK: no forbidden tracked files."
+
+      - name: Scan obvious secret patterns
+        run: |
+          set -Eeuo pipefail
+
+          findings_file="/tmp/phase3-secret-findings.txt"
+
+          grep -R \
+            --exclude-dir=.git \
+            --exclude-dir=.terraform \
+            --exclude-dir=logs \
+            --exclude-dir=tmp \
+            --exclude='*.lock.hcl' \
+            --exclude='phase3-security-scan.yml' \
+            --line-number \
+            -E 'AKIA[0-9A-Z]{16}|ghp_|github_pat_|tm_key_[a-f0-9]{20,}|aws_secret_access_key[[:space:]]*=|secret_string[[:space:]]*=|password[[:space:]]*=' \
+            _shared fase3 > "$findings_file" || true
+
+          cat "$findings_file"
+
+          unexpected="$(
+            grep -v 'manage_master_user_password = true' "$findings_file" \
+              | grep -v 'password=;' \
+              | grep -v '`password=`' \
+              | grep -v 'referência documental ao padrão' \
+              || true
+          )"
+
+          if [[ -n "$unexpected" ]]; then
+            echo "Unexpected possible secret findings:"
+            echo "$unexpected"
+            exit 1
+          fi
+
+          echo "OK: no unexpected secret findings."

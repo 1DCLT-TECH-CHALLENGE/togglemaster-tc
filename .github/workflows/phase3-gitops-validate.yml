@@ -1,0 +1,38 @@
+name: Phase 3 - GitOps Validate
+
+on:
+  pull_request:
+    paths:
+      - "fase3/gitops/**"
+      - ".github/workflows/phase3-gitops-validate.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "fase3/gitops/**"
+      - ".github/workflows/phase3-gitops-validate.yml"
+
+jobs:
+  gitops-validate:
+    name: Render Kustomize manifests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Render base
+        run: kubectl kustomize fase3/gitops/base > /tmp/phase3-gitops-base.yaml
+
+      - name: Render dev overlay
+        run: kubectl kustomize fase3/gitops/overlays/dev > /tmp/phase3-gitops-dev.yaml
+
+      - name: Render ArgoCD apps
+        run: kubectl kustomize fase3/gitops/apps > /tmp/phase3-argocd-apps.yaml

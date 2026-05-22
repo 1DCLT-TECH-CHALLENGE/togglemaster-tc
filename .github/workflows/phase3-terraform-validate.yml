@@ -1,0 +1,43 @@
+name: Phase 3 - Terraform Validate
+
+on:
+  pull_request:
+    paths:
+      - "fase3/terraform/**"
+      - ".github/workflows/phase3-terraform-validate.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "fase3/terraform/**"
+      - ".github/workflows/phase3-terraform-validate.yml"
+
+jobs:
+  terraform-validate:
+    name: Terraform fmt/init/validate
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.5
+
+      - name: Terraform fmt check
+        working-directory: fase3/terraform
+        run: terraform fmt -recursive -check
+
+      - name: Terraform init without backend
+        working-directory: fase3/terraform/environments/dev
+        run: terraform init -backend=false
+
+      - name: Terraform validate
+        working-directory: fase3/terraform/environments/dev
+        run: terraform validate
