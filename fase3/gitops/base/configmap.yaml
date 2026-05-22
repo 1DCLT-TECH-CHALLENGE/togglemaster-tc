@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: togglemaster-runtime-config
+  namespace: togglemaster
+  labels:
+    app.kubernetes.io/name: togglemaster
+    app.kubernetes.io/part-of: togglemaster-tc
+data:
+  AUTH_SERVICE_URL: http://auth-service:8000
+  FLAG_SERVICE_URL: http://flag-service:8000
+  TARGETING_SERVICE_URL: http://targeting-service:8000
+  REDIS_PORT: "6379"
+  AWS_REGION: us-east-1

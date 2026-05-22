@@ -1,0 +1,15 @@
+# Exemplo de tfvars.
+# NÃO copiar credenciais AWS para este arquivo.
+# NÃO versionar terraform.tfvars real.
+
+project_name  = "togglemaster"
+environment   = "dev"
+aws_region    = "us-east-1"
+lab_role_name = "LabRole"
+
+vpc_cidr = "10.30.0.0/16"
+
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b"
+]
