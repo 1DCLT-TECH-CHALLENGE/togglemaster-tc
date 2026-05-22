@@ -5,10 +5,15 @@ locals {
 module "networking" {
   source = "../../modules/networking"
 
-  name_prefix        = local.name_prefix
-  vpc_cidr           = var.vpc_cidr
-  availability_zones = var.availability_zones
-  tags               = var.tags
+  name_prefix           = local.name_prefix
+  vpc_cidr              = var.vpc_cidr
+  availability_zones    = var.availability_zones
+  subnet_newbits        = var.subnet_newbits
+  public_subnet_offset  = var.public_subnet_offset
+  private_subnet_offset = var.private_subnet_offset
+  enable_nat_gateway    = var.enable_nat_gateway
+  single_nat_gateway    = var.single_nat_gateway
+  tags                  = var.tags
 }
 
 

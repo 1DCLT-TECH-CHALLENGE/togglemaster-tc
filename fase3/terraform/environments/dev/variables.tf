@@ -25,7 +25,7 @@ variable "lab_role_name" {
 variable "vpc_cidr" {
   description = "CIDR da VPC da Fase 3."
   type        = string
-  default     = "10.30.0.0/16"
+  default     = "10.10.0.0/16"
 }
 
 variable "availability_zones" {
@@ -55,4 +55,34 @@ variable "tags" {
     ManagedBy   = "Terraform"
     Course      = "FIAP-Tech-Challenge"
   }
+}
+
+variable "subnet_newbits" {
+  description = "Quantidade de bits adicionais para cálculo das subnets. Com VPC /16 e valor 4, gera subnets /20."
+  type        = number
+  default     = 4
+}
+
+variable "public_subnet_offset" {
+  description = "Offset inicial das subnets públicas."
+  type        = number
+  default     = 0
+}
+
+variable "private_subnet_offset" {
+  description = "Offset inicial das subnets privadas."
+  type        = number
+  default     = 2
+}
+
+variable "enable_nat_gateway" {
+  description = "Habilita NAT Gateway no ambiente dev."
+  type        = bool
+  default     = true
+}
+
+variable "single_nat_gateway" {
+  description = "Usa um único NAT Gateway no ambiente dev/AWS Academy."
+  type        = bool
+  default     = true
 }

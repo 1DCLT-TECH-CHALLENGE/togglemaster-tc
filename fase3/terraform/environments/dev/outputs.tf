@@ -174,3 +174,13 @@ output "application_secret_names" {
   description = "Nomes dos Secrets Manager para configuração das aplicações."
   value       = module.secrets.secret_names
 }
+
+output "nat_gateway_ids" {
+  description = "IDs dos NAT Gateways."
+  value       = module.networking.nat_gateway_ids
+}
+
+output "nat_eip_allocation_ids" {
+  description = "Allocation IDs dos Elastic IPs dos NAT Gateways."
+  value       = module.networking.nat_eip_allocation_ids
+}

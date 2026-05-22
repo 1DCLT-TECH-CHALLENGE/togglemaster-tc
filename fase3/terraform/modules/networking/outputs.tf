@@ -27,3 +27,13 @@ output "private_route_table_ids" {
   description = "IDs das route tables privadas."
   value       = aws_route_table.private[*].id
 }
+
+output "nat_gateway_ids" {
+  description = "IDs dos NAT Gateways criados."
+  value       = aws_nat_gateway.this[*].id
+}
+
+output "nat_eip_allocation_ids" {
+  description = "Allocation IDs dos Elastic IPs dos NAT Gateways."
+  value       = aws_eip.nat[*].id
+}
