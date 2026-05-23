@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: evaluation-service
-          image: 590183666984.dkr.ecr.us-east-1.amazonaws.com/togglemaster-dev/evaluation-service:c0f03bb
+          image: 590183666984.dkr.ecr.us-east-1.amazonaws.com/togglemaster-dev/evaluation-service:otel-b4f0b5c
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000

@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: flag-service
-          image: 590183666984.dkr.ecr.us-east-1.amazonaws.com/togglemaster-dev/flag-service:c0f03bb
+          image: 590183666984.dkr.ecr.us-east-1.amazonaws.com/togglemaster-dev/flag-service:otel-b4f0b5c
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
