@@ -7,8 +7,12 @@ metadata:
     app.kubernetes.io/name: togglemaster
     app.kubernetes.io/part-of: togglemaster-tc
 data:
+  PORT: "8000"
   AUTH_SERVICE_URL: http://auth-service:8000
   FLAG_SERVICE_URL: http://flag-service:8000
   TARGETING_SERVICE_URL: http://targeting-service:8000
   REDIS_PORT: "6379"
+  REDIS_URL: redis://togglemaster-dev-redis.hmdfss.ng.0001.use1.cache.amazonaws.com:6379
   AWS_REGION: us-east-1
+  AWS_SQS_URL: https://sqs.us-east-1.amazonaws.com/590183666984/togglemaster-dev-togglemaster-events
+  AWS_DYNAMODB_TABLE: togglemaster-dev-ToggleMasterAnalytics
