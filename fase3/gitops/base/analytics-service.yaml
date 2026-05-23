@@ -26,6 +26,22 @@ spec:
           envFrom:
             - configMapRef:
                 name: togglemaster-runtime-config
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: togglemaster-runtime-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: togglemaster-runtime-secret
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_SESSION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: togglemaster-runtime-secret
+                  key: AWS_SESSION_TOKEN
           readinessProbe:
             httpGet:
               path: /health
