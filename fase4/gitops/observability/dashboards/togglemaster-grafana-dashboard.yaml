@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: togglemaster-grafana-dashboard
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/name: togglemaster-grafana-dashboard
+    app.kubernetes.io/part-of: togglemaster
+    togglemaster.io/phase: "4"
+data:
+  togglemaster-ecosystem-dashboard.json: |
+    {
+      "uid": "togglemaster-ecosystem",
+      "title": "ToggleMaster - Observability Overview",
+      "tags": ["togglemaster", "phase4", "observability"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Running Pods - ToggleMaster",
+          "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+          "targets": [
+            {
+              "expr": "sum(kube_pod_status_phase{namespace=\"togglemaster\",phase=\"Running\"})",
+              "legendFormat": "running pods",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Ready Nodes",
+          "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+          "targets": [
+            {
+              "expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})",
+              "legendFormat": "ready nodes",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU Usage by ToggleMaster Pod",
+          "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"togglemaster\",container!=\"\"}[5m])) by (pod)",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Memory Usage by ToggleMaster Pod",
+          "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"togglemaster\",container!=\"\"}) by (pod)",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "logs",
+          "title": "ToggleMaster Logs - Loki",
+          "gridPos": {"x": 0, "y": 12, "w": 24, "h": 8},
+          "targets": [
+            {
+              "expr": "{namespace=\"togglemaster\"}",
+              "refId": "A"
+            }
+          ]
+        }
+      ]
+    }

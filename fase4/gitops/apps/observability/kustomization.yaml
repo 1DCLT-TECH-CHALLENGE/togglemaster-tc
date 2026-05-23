@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace-application.yaml
+  - kube-prometheus-stack-application.yaml
+  - loki-application.yaml
+  - promtail-application.yaml
+  - dashboards-application.yaml
+  - opentelemetry-collector-application.yaml
