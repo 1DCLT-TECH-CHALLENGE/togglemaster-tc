@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# BEGIN BLOCO20_3_COMPOSE_RESTORE_GUARD
+# Proteção: o fluxo E2E da Fase 2 injeta API key dinâmica no Compose
+# para recriar o evaluation-service. Essa alteração é runtime-only e
+# não pode permanecer no arquivo versionado.
+PHASE2_COMPOSE_FILE="$HOME/togglemaster-tc/fase2/docker/docker-compose.phase2-exec.yaml"
+PHASE2_COMPOSE_BACKUP="$(mktemp /tmp/togglemaster-phase2-compose-before-e2e.XXXXXX.yaml)"
+
+if [ -f "$PHASE2_COMPOSE_FILE" ]; then
+  cp "$PHASE2_COMPOSE_FILE" "$PHASE2_COMPOSE_BACKUP"
+fi
+
+restore_phase2_compose_after_e2e() {
+  local rc=$?
+  if [ -f "${PHASE2_COMPOSE_BACKUP:-}" ] && [ -f "${PHASE2_COMPOSE_FILE:-}" ]; then
+    cp "$PHASE2_COMPOSE_BACKUP" "$PHASE2_COMPOSE_FILE"
+    rm -f "$PHASE2_COMPOSE_BACKUP"
+    echo "OK: Compose da Fase 2 restaurado após E2E para evitar persistência de API key runtime."
+  fi
+  exit "$rc"
+}
+
+trap restore_phase2_compose_after_e2e EXIT
+# END BLOCO20_3_COMPOSE_RESTORE_GUARD
+
+
 BASE="$HOME/togglemaster-tc/fase2"
 DOCKER_DIR="$BASE/docker"
 COMPOSE_FILE="$DOCKER_DIR/docker-compose.phase2-exec.yaml"
