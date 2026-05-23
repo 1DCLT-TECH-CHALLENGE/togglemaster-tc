@@ -91,3 +91,72 @@ index e0521cb..88cae27 100644
    - opentelemetry-collector-application.yaml
 +  - otel-collector-application.yaml
 ```
+
+## Resultado runtime
+
+```text
+OTEL_APP=Synced/Healthy
+DEPLOYMENT_AVAILABLE=1
+OTLP_HTTP_STATUS=200
+OTEL_MARKER_FOUND=true
+```
+
+## Application
+
+```text
+NAME                           SYNC STATUS   HEALTH STATUS   REVISION                                   PROJECT
+observability-otel-collector   Synced        Healthy         601ec5a1cef9df9dfd95fedc1916a2ce35411dd6   default
+```
+
+## Pods e Service
+
+```text
+NAME                                                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/otel-collector                             1/1     1            1           42s
+NAME                                                     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                                         AGE
+service/otel-collector                                   ClusterIP   172.20.181.189   <none>        4317/TCP,4318/TCP,8888/TCP,8889/TCP,13133/TCP   42s
+NAME                                                                                  AGE
+servicemonitor.monitoring.coreos.com/otel-collector                                   42s
+NAME                                                        READY   STATUS    RESTARTS   AGE   IP             NODE                           NOMINATED NODE   READINESS GATES
+otel-collector-6f554966d7-v7wbh                             1/1     Running   0          43s   10.10.63.217   ip-10-10-59-138.ec2.internal   <none>           <none>
+```
+
+## Health endpoint
+
+```text
+{"status":"Server available","upSince":"2026-05-23T20:18:08.629040878Z","uptime":"32.703748102s"}
+```
+
+## OTLP HTTP response
+
+```text
+HTTP_STATUS=200
+{"partialSuccess":{}}
+```
+
+## Marker enviado
+
+```text
+MARKER=TOGGLEMASTER_OTEL_LOG_1779567521
+```
+
+## Evidência no log do Collector
+
+```text
+ScopeLogs #0
+ScopeLogs SchemaURL: 
+InstrumentationScope togglemaster.tc.otel.smoke 
+LogRecord #0
+ObservedTimestamp: 1970-01-01 00:00:00 +0000 UTC
+Timestamp: 2026-05-23 20:18:41.523517314 +0000 UTC
+SeverityText: INFO
+SeverityNumber: Unspecified(0)
+Body: Str(TOGGLEMASTER_OTEL_LOG_1779567521)
+Attributes:
+     -> tc.marker: Str(TOGGLEMASTER_OTEL_LOG_1779567521)
+     -> component: Str(otel-collector-validation)
+Trace ID: 
+Span ID: 
+Flags: 0
+	{"kind": "exporter", "data_type": "logs", "name": "debug"}
+```
