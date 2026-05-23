@@ -21,3 +21,18 @@ https://otlp.nr-data.net:4318
 29:        endpoint: ${env:NEW_RELIC_OTLP_ENDPOINT}
 128:        - name: NEW_RELIC_OTLP_ENDPOINT
 ```
+
+## Resultado runtime
+```text
+NAME                           SYNC STATUS   HEALTH STATUS   REVISION                                   PROJECT
+observability-otel-collector   Synced        Healthy         a0970bfc6d95990ac38b5474c1a22001fc9b1bc6   default
+NAME                                                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/otel-collector                             1/1     1            1           85m
+NAME                                                            READY   STATUS    RESTARTS   AGE
+pod/otel-collector-7b8dc5cd9c-66l8r                             1/1     Running   0          40s
+ERROR_COUNT=14
+NEWRELIC_CFG_COUNT=14
+```
+
+## Observação
+A confirmação visual no New Relic será feita nos próximos blocos, após gerar novo fluxo E2E e abrir o APM.
