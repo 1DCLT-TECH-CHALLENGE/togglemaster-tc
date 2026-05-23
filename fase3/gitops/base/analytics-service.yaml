@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: analytics-service
-          image: REPLACE_WITH_ECR_ANALYTICS_SERVICE_IMAGE
+          image: 590183666984.dkr.ecr.us-east-1.amazonaws.com/togglemaster-dev/analytics-service:c0f03bb
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
