@@ -113,7 +113,7 @@ resource "aws_eks_node_group" "default" {
 
   launch_template {
     id      = aws_launch_template.nodes.id
-    version = "$Latest"
+    version = aws_launch_template.nodes.latest_version
   }
 
   tags = merge(
