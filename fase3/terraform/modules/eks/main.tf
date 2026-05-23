@@ -41,7 +41,10 @@ resource "aws_eks_cluster" "this" {
 resource "aws_launch_template" "nodes" {
   name_prefix = "${var.name_prefix}-eks-nodes-"
 
-  vpc_security_group_ids = [var.node_security_group_id]
+  vpc_security_group_ids = [
+    var.node_security_group_id,
+    aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+  ]
 
   block_device_mappings {
     device_name = "/dev/xvda"
@@ -121,6 +124,7 @@ resource "aws_eks_node_group" "default" {
   )
 
   depends_on = [
-    aws_eks_cluster.this
+    aws_eks_cluster.this,
+    aws_launch_template.nodes
   ]
 }
