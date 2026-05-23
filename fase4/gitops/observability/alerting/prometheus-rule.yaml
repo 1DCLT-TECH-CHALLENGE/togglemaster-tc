@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: togglemaster-phase4-alerts
+  namespace: observability
+  labels:
+    release: kube-prometheus-stack
+    app.kubernetes.io/name: togglemaster-phase4-alerts
+    app.kubernetes.io/part-of: togglemaster-observability
+spec:
+  groups:
+    - name: togglemaster.phase4.validation
+      rules:
+        - alert: ToggleMasterPhase4ValidationFiring
+          expr: vector(1)
+          for: 1m
+          labels:
+            severity: warning
+            phase: fase4
+            component: togglemaster
+            alert_type: validation
+          annotations:
+            summary: "Alerta controlado de validação da Fase 4"
+            description: "Alerta controlado para demonstrar estado Firing no Prometheus e alimentar a cadeia de incidente, ChatOps e self-healing da Fase 4."
+
+    - name: togglemaster.phase4.operational
+      rules:
+        - alert: ToggleMasterDeploymentReplicasUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="togglemaster"} < kube_deployment_spec_replicas{namespace="togglemaster"}
+          for: 2m
+          labels:
+            severity: critical
+            phase: fase4
+            component: togglemaster
+            alert_type: availability
+          annotations:
+            summary: "Deployment ToggleMaster com réplicas indisponíveis"
+            description: "O deployment {{ $labels.deployment }} no namespace {{ $labels.namespace }} possui menos réplicas disponíveis do que o especificado."
+
+        - alert: ToggleMasterPodRestartDetected
+          expr: increase(kube_pod_container_status_restarts_total{namespace="togglemaster"}[10m]) > 0
+          for: 1m
+          labels:
+            severity: warning
+            phase: fase4
+            component: togglemaster
+            alert_type: reliability
+          annotations:
+            summary: "Restart de pod detectado no ToggleMaster"
+            description: "O container {{ $labels.container }} do pod {{ $labels.pod }} reiniciou nos últimos 10 minutos."

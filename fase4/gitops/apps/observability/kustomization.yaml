@@ -8,3 +8,4 @@ resources:
   - dashboards-application.yaml
   - opentelemetry-collector-application.yaml
   - otel-collector-application.yaml
+  - alerting-application.yaml
