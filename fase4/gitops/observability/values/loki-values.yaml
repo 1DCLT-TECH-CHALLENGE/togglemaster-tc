@@ -53,3 +53,12 @@ read:
   replicas: 0
 write:
   replicas: 0
+
+# Phase 4 AWS Academy lightweight profile.
+# Disable Loki memcached caches to avoid Pending pods and memory pressure.
+chunksCache:
+  enabled: false
+
+resultsCache:
+  enabled: false
+
