@@ -18,6 +18,8 @@ log = logging.getLogger(__name__)
 load_dotenv() 
 
 app = Flask(__name__)
+from otel_setup import configure_otel
+configure_otel(app, "togglemaster-targeting-service")
 
 # --- Configuração ---
 DATABASE_URL = os.getenv("DATABASE_URL")

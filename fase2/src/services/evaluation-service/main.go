@@ -29,6 +29,8 @@ type App struct {
 }
 
 func main() {
+	shutdownTracing := startTracing()
+	defer shutdownTracing()
 	_ = godotenv.Load() // Carrega .env para dev local
 
 	// --- Configuração ---
@@ -114,15 +116,15 @@ func main() {
 		RedisClient:         rdb,
 		SqsSvc:              sqsSvc,
 		SqsQueueURL:         sqsQueueURL,
-		HttpClient:          httpClient,
+		HttpClient:          instrumentHTTPClient(httpClient),
 		FlagServiceURL:      flagSvcURL,
 		TargetingServiceURL: targetingSvcURL,
 	}
 
 	// --- Rotas ---
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", app.healthHandler)
-	mux.HandleFunc("/evaluate", app.evaluationHandler)
+	mux.Handle("/health", instrumentHandler("/health", http.HandlerFunc(app.healthHandler)))
+	mux.Handle("/evaluate", instrumentHandler("/evaluate", http.HandlerFunc(app.evaluationHandler)))
 
 	log.Printf("Serviço de Avaliação (Go) rodando na porta %s", port)
 	if err := http.ListenAndServe(":"+port, mux); err != nil {

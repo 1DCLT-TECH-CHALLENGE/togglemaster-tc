@@ -32,6 +32,8 @@ spec:
             - configMapRef:
                 name: togglemaster-runtime-config
           env:
+            - name: OTEL_SERVICE_NAME
+              value: togglemaster-evaluation-service
             - name: SERVICE_API_KEY
               valueFrom:
                 secretKeyRef:

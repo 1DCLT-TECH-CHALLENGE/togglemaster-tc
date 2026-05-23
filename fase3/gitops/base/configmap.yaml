@@ -16,3 +16,10 @@ data:
   AWS_REGION: us-east-1
   AWS_SQS_URL: https://sqs.us-east-1.amazonaws.com/590183666984/togglemaster-dev-togglemaster-events
   AWS_DYNAMODB_TABLE: togglemaster-dev-ToggleMasterAnalytics
+  ENVIRONMENT: dev
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: none
+  OTEL_LOGS_EXPORTER: none
+  OTEL_RESOURCE_ATTRIBUTES: service.namespace=togglemaster,deployment.environment=dev
