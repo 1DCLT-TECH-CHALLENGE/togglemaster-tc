@@ -15,6 +15,7 @@ spec:
         releaseName: loki
         valueFiles:
           - $values/fase4/gitops/observability/values/loki-values.yaml
+          - $values/fase4/gitops/observability/values/loki-lab-writable-values.yaml
     - repoURL: git@github.com:1DCLT-TECH-CHALLENGE/togglemaster-tc.git
       targetRevision: main
       ref: values

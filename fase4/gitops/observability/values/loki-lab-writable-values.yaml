@@ -1,0 +1,11 @@
+# Phase 4 AWS Academy lab overlay.
+# Keep the container root filesystem read-only, but provide a writable
+# emptyDir at /var/loki because Loki's generated config uses /var/loki
+# for path_prefix, chunks, rules and ruler WAL.
+singleBinary:
+  extraVolumes:
+    - name: loki-var
+      emptyDir: {}
+  extraVolumeMounts:
+    - name: loki-var
+      mountPath: /var/loki
