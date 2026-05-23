@@ -1,18 +1,36 @@
-# fase4 — ToggleMaster TC
+# ToggleMaster - Fase 4 - Observabilidade Total e Resposta Ativa
 
-Diretório da fase4 no rebuild ToggleMaster TC.
+## Status
 
-## Status atual
+Fase 4 iniciada oficialmente após gate consolidado pré-Fase 4.
 
-Estrutura inicial criada. Implementação técnica será adicionada na etapa específica da fase.
+A Fase 4 **não é rebuild**. Ela parte da base funcional das Fases 2 e 3:
 
-## Organização
+- Fase 2 local revalidada.
+- Fase 3 cloud revalidada.
+- EKS, ArgoCD, GitOps, microsserviços, SQS, DynamoDB e fluxo funcional validados.
+- Gate pré-Fase 4 registrado em `_shared/evidencias/gate-pre-fase4-fases2-3.md`.
 
-- insumos/
-- repos/upstream/
-- src/
-- local/scripts/
-- docker/
-- docs/
-- logs/
-- tmp/
+## Objetivo
+
+Implementar observabilidade total e resposta ativa sobre o ecossistema ToggleMaster.
+
+## Escopo técnico
+
+- Prometheus para métricas.
+- Loki para logs centralizados.
+- Grafana para dashboard customizado.
+- OpenTelemetry Collector como ponto central de telemetria.
+- Instrumentação dos 5 microsserviços.
+- APM com Datadog ou New Relic.
+- Alertas inteligentes.
+- Integração com PagerDuty ou OpsGenie.
+- Notificação ChatOps.
+- Automação de self-healing.
+- Evidências visuais e roteiro de vídeo.
+- Relatório final em PDF.
+
+## Regra operacional
+
+Nenhuma implementação será considerada concluída apenas por estar configurada.
+Cada requisito precisa ser demonstrado funcionando na prática.
