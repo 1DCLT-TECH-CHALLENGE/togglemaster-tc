@@ -7,3 +7,4 @@ resources:
   - promtail-application.yaml
   - dashboards-application.yaml
   - opentelemetry-collector-application.yaml
+  - otel-collector-application.yaml
