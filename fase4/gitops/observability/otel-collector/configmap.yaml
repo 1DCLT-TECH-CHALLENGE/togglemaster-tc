@@ -32,6 +32,10 @@ data:
         verbosity: detailed
       prometheus:
         endpoint: 0.0.0.0:8889
+      otlphttp/newrelic:
+        endpoint: ${env:NEW_RELIC_OTLP_ENDPOINT}
+        headers:
+          api-key: ${env:NEW_RELIC_LICENSE_KEY}
 
     service:
       telemetry:
@@ -50,6 +54,7 @@ data:
             - batch
           exporters:
             - debug
+            - otlphttp/newrelic
         metrics:
           receivers:
             - otlp

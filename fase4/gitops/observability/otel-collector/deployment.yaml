@@ -29,6 +29,14 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - --config=/conf/otel-collector-config.yaml
+          env:
+            - name: NEW_RELIC_OTLP_ENDPOINT
+              value: https://otlp.nr-data.net:4318
+            - name: NEW_RELIC_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: newrelic-otel-secret
+                  key: license_key
           ports:
             - name: otlp-grpc
               containerPort: 4317
