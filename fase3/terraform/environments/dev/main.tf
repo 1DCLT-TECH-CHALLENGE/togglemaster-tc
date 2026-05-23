@@ -81,6 +81,10 @@ module "eks" {
   cluster_additional_security_group_id = module.security.eks_cluster_additional_security_group_id
   node_security_group_id               = module.security.eks_nodes_security_group_id
   tags                                 = var.tags
+  node_instance_types                  = ["t3.small"]
+  node_min_size                        = 2
+  node_desired_size                    = 5
+  node_max_size                        = 5
 }
 
 
