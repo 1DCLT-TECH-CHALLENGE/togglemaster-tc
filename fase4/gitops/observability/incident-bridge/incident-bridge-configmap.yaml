@@ -21,6 +21,7 @@ data:
 
     TARGET_ALERTS = {
         "ToggleMasterPhase4ValidationFiring",
+        "ToggleMasterPhase4IncidentBridgeFiring",
     }
 
     def log(message):
