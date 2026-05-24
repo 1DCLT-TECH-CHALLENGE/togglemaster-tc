@@ -17,7 +17,7 @@ spec:
         app.kubernetes.io/name: togglemaster-incident-bridge
         app.kubernetes.io/part-of: togglemaster-observability
       annotations:
-        togglemaster.fiap/config-version: "20260523214359"
+        togglemaster.fiap/config-version: "20260523215632"
     spec:
       containers:
         - name: incident-bridge

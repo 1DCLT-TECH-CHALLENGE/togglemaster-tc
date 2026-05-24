@@ -21,6 +21,7 @@ data:
 
     TARGET_ALERTS = {
         "ToggleMasterPhase4ValidationFiring",
+        "ToggleMasterPhase4ChatOpsFiring",
         "ToggleMasterPhase4IncidentBridgeFiring",
     }
 
@@ -33,7 +34,7 @@ data:
         req = urllib.request.Request(
             url,
             data=data,
-            headers={"Content-Type": "application/json", **headers},
+            headers={"Content-Type": "application/json", "User-Agent": "ToggleMaster-FIAP-TC/1.0", **headers},
             method="POST",
         )
         try:
@@ -167,7 +168,9 @@ data:
                 processed += 1
                 log(f"processed_alert={alertname} status={status}")
 
-                if PAGERDUTY_ROUTING_KEY:
+                if labels.get("chatops_only") == "enabled":
+                    log("pagerduty_status=skipped_chatops_only")
+                elif PAGERDUTY_ROUTING_KEY:
                     send_pagerduty(alert)
                 else:
                     log("pagerduty_status=disabled")

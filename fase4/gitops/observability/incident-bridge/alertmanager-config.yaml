@@ -17,8 +17,8 @@ spec:
     receiver: togglemaster-incident-bridge
     matchers:
       - name: alertname
-        value: ToggleMasterPhase4ValidationFiring
-        matchType: =
+        value: ToggleMasterPhase4.*Firing
+        matchType: =~
   receivers:
     - name: togglemaster-incident-bridge
       webhookConfigs:

@@ -25,6 +25,21 @@ spec:
             summary: "Alerta controlado para Incident Management e ChatOps"
             description: "Alerta fresco usado para acionar automaticamente PagerDuty e Discord na validação da Fase 4."
 
+        - alert: ToggleMasterPhase4ChatOpsFiring
+          expr: vector(1)
+          for: 30s
+          labels:
+            severity: warning
+            phase: fase4
+            component: togglemaster
+            namespace: observability
+            alert_type: chatops-validation
+            incident_chain: enabled
+            chatops_only: enabled
+          annotations:
+            summary: "Alerta controlado para validação de ChatOps"
+            description: "Alerta fresco usado para acionar automaticamente uma notificação no Discord durante a validação da Fase 4."
+
         - alert: ToggleMasterPhase4ValidationFiring
           expr: vector(1)
           for: 1m
