@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: togglemaster-evidence-dashboard
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/name: togglemaster-evidence-dashboard
+data:
+  togglemaster-evidence-dashboard.json: |
+    {
+      "id": null,
+      "uid": "togglemaster-evidence-dashboard",
+      "title": "ToggleMaster - Evidence Dashboard",
+      "tags": ["togglemaster", "fase4", "fiap", "evidence"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "10s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "DS_PROMETHEUS",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": {
+              "text": "Prometheus",
+              "value": "prometheus"
+            },
+            "hide": 0,
+            "label": "Prometheus"
+          },
+          {
+            "name": "DS_LOKI",
+            "type": "datasource",
+            "query": "loki",
+            "current": {
+              "text": "Loki",
+              "value": "Loki"
+            },
+            "hide": 0,
+            "label": "Loki"
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Running Pods - ToggleMaster",
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "count(kube_pod_status_phase{namespace=\"togglemaster\",phase=\"Running\"} == 1)",
+              "instant": true
+            }
+          ],
+          "options": {
+            "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""},
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Ready Nodes",
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "count(kube_node_status_condition{condition=\"Ready\",status=\"true\"} == 1)",
+              "instant": true
+            }
+          ],
+          "options": {
+            "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""},
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU Usage by ToggleMaster Pod",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"togglemaster\",pod!=\"\",container!=\"\",container!=\"POD\"}[5m])) by (pod)",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {"unit": "cores"},
+            "overrides": []
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Memory Usage by ToggleMaster Pod",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"togglemaster\",pod!=\"\",container!=\"\",container!=\"POD\"}) by (pod)",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {"unit": "bytes"},
+            "overrides": []
+          }
+        },
+        {
+          "type": "logs",
+          "title": "Loki Logs - Namespace ToggleMaster",
+          "gridPos": {"h": 10, "w": 24, "x": 0, "y": 12},
+          "datasource": {"type": "loki", "uid": "${DS_LOKI}"},
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "{namespace=\"togglemaster\"}",
+              "queryType": "range"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending"
+          }
+        }
+      ]
+    }
