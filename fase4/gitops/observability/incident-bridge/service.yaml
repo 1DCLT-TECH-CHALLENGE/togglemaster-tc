@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: togglemaster-incident-bridge
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: togglemaster-incident-bridge
+    app.kubernetes.io/part-of: togglemaster-observability
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: togglemaster-incident-bridge
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

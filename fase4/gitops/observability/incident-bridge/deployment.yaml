@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: togglemaster-incident-bridge
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: togglemaster-incident-bridge
+    app.kubernetes.io/part-of: togglemaster-observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: togglemaster-incident-bridge
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: togglemaster-incident-bridge
+        app.kubernetes.io/part-of: togglemaster-observability
+    spec:
+      containers:
+        - name: incident-bridge
+          image: python:3.11-slim
+          imagePullPolicy: IfNotPresent
+          command: ["python", "/app/incident_bridge.py"]
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: PORT
+              value: "8080"
+            - name: PAGERDUTY_ROUTING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: togglemaster-incident-bridge-secret
+                  key: pagerduty_routing_key
+            - name: DISCORD_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: togglemaster-incident-bridge-secret
+                  key: discord_webhook_url
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: bridge-code
+              mountPath: /app
+              readOnly: true
+      volumes:
+        - name: bridge-code
+          configMap:
+            name: togglemaster-incident-bridge-code

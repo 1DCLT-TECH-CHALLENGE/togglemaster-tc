@@ -9,3 +9,4 @@ resources:
   - opentelemetry-collector-application.yaml
   - otel-collector-application.yaml
   - alerting-application.yaml
+  - incident-bridge-application.yaml

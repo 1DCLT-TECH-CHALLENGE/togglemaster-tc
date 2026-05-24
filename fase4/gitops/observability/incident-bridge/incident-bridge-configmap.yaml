@@ -1,0 +1,185 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: togglemaster-incident-bridge-code
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: togglemaster-incident-bridge
+    app.kubernetes.io/part-of: togglemaster-observability
+data:
+  incident_bridge.py: |
+    import json
+    import os
+    import time
+    import urllib.request
+    import urllib.error
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    PAGERDUTY_ROUTING_KEY = os.environ.get("PAGERDUTY_ROUTING_KEY", "")
+    DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
+    PORT = int(os.environ.get("PORT", "8080"))
+
+    TARGET_ALERTS = {
+        "ToggleMasterPhase4ValidationFiring",
+    }
+
+    def log(message):
+        print(f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} {message}", flush=True)
+
+    def post_json(url, payload, headers=None):
+        headers = headers or {}
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={"Content-Type": "application/json", **headers},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                body = resp.read(200).decode("utf-8", errors="ignore")
+                return resp.status, body
+        except urllib.error.HTTPError as exc:
+            body = exc.read(300).decode("utf-8", errors="ignore")
+            return exc.code, body
+        except Exception as exc:
+            return 0, str(exc)
+
+    def send_pagerduty(alert):
+        labels = alert.get("labels", {})
+        annotations = alert.get("annotations", {})
+
+        alertname = labels.get("alertname", "unknown-alert")
+        severity = labels.get("severity", "warning")
+        component = labels.get("component", "togglemaster")
+        phase = labels.get("phase", "fase4")
+
+        pd_severity = "critical" if severity == "critical" else "warning"
+        dedup_key = f"togglemaster-{phase}-{alertname}-{component}"
+
+        payload = {
+            "routing_key": PAGERDUTY_ROUTING_KEY,
+            "event_action": "trigger",
+            "dedup_key": dedup_key,
+            "payload": {
+                "summary": annotations.get("summary", f"{alertname} firing"),
+                "source": "prometheus-alertmanager",
+                "severity": pd_severity,
+                "component": component,
+                "group": phase,
+                "class": labels.get("alert_type", "validation"),
+                "custom_details": {
+                    "alertname": alertname,
+                    "status": alert.get("status", ""),
+                    "severity": severity,
+                    "phase": phase,
+                    "component": component,
+                    "description": annotations.get("description", ""),
+                    "startsAt": alert.get("startsAt", ""),
+                    "generatorURL": alert.get("generatorURL", ""),
+                },
+            },
+        }
+
+        status, body = post_json("https://events.pagerduty.com/v2/enqueue", payload)
+        log(f"pagerduty_status={status} dedup_key={dedup_key} body={body[:120]}")
+        return status
+
+    def send_discord(alert):
+        labels = alert.get("labels", {})
+        annotations = alert.get("annotations", {})
+
+        alertname = labels.get("alertname", "unknown-alert")
+        severity = labels.get("severity", "warning")
+        component = labels.get("component", "togglemaster")
+        phase = labels.get("phase", "fase4")
+
+        content = (
+            "🚨 **ToggleMaster Fase 4 - Alerta FIRING**\n"
+            f"**Alerta:** `{alertname}`\n"
+            f"**Severidade:** `{severity}`\n"
+            f"**Componente:** `{component}`\n"
+            f"**Fase:** `{phase}`\n"
+            f"**Resumo:** {annotations.get('summary', '')}\n"
+            f"**Descrição:** {annotations.get('description', '')}\n"
+            f"**Início:** `{alert.get('startsAt', '')}`\n"
+            "\n"
+            "Fluxo validado: Prometheus/Alertmanager → Incident Bridge → PagerDuty + Discord."
+        )
+
+        payload = {
+            "username": "ToggleMaster Alertmanager",
+            "content": content,
+        }
+
+        status, body = post_json(DISCORD_WEBHOOK_URL, payload)
+        log(f"discord_status={status} alertname={alertname} body={body[:120]}")
+        return status
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, fmt, *args):
+            return
+
+        def do_GET(self):
+            if self.path == "/health":
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"ok\n")
+                return
+
+            self.send_response(404)
+            self.end_headers()
+
+        def do_POST(self):
+            if self.path != "/alertmanager":
+                self.send_response(404)
+                self.end_headers()
+                return
+
+            length = int(self.headers.get("Content-Length", "0"))
+            raw = self.rfile.read(length)
+
+            try:
+                payload = json.loads(raw.decode("utf-8"))
+            except Exception as exc:
+                log(f"invalid_json={exc}")
+                self.send_response(400)
+                self.end_headers()
+                return
+
+            alerts = payload.get("alerts", [])
+            processed = 0
+
+            for alert in alerts:
+                labels = alert.get("labels", {})
+                alertname = labels.get("alertname", "")
+                status = alert.get("status", "")
+
+                if alertname not in TARGET_ALERTS:
+                    log(f"ignored_alert={alertname} status={status}")
+                    continue
+
+                if status != "firing":
+                    log(f"ignored_non_firing_alert={alertname} status={status}")
+                    continue
+
+                processed += 1
+                log(f"processed_alert={alertname} status={status}")
+
+                if PAGERDUTY_ROUTING_KEY:
+                    send_pagerduty(alert)
+                else:
+                    log("pagerduty_status=disabled")
+
+                if DISCORD_WEBHOOK_URL:
+                    send_discord(alert)
+                else:
+                    log("discord_status=disabled")
+
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(json.dumps({"processed": processed}).encode("utf-8"))
+
+    if __name__ == "__main__":
+        log(f"starting_incident_bridge port={PORT}")
+        HTTPServer(("0.0.0.0", PORT), Handler).serve_forever()

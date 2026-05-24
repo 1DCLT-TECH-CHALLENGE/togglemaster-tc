@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: togglemaster-phase4-incident-routing
+  namespace: observability
+  labels:
+    release: kube-prometheus-stack
+    app.kubernetes.io/name: togglemaster-phase4-incident-routing
+    app.kubernetes.io/part-of: togglemaster-observability
+spec:
+  route:
+    groupBy:
+      - alertname
+    groupWait: 5s
+    groupInterval: 30s
+    repeatInterval: 30m
+    receiver: togglemaster-incident-bridge
+    matchers:
+      - name: alertname
+        value: ToggleMasterPhase4ValidationFiring
+        matchType: =
+  receivers:
+    - name: togglemaster-incident-bridge
+      webhookConfigs:
+        - url: http://togglemaster-incident-bridge.observability.svc.cluster.local:8080/alertmanager
+          sendResolved: true
