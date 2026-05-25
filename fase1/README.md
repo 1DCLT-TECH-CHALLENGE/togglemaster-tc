@@ -32,3 +32,13 @@ Esta fase já foi entregue anteriormente. No rebuild atual, ela será reconstru�
 - `docs/evidencias/`: evidências de execução;
 - `logs/`: logs locais da fase;
 - `tmp/`: arquivos temporários não versionáveis.
+
+<!-- TOGGLEMASTER_FINAL_NAV_START -->
+## Reprodutibilidade da Fase 1
+
+Escopo: aplicação monolítica/MVP local, sem AWS.
+
+Comando principal:
+
+`./bootstraps/01_bootstrap_fase1.sh`
+<!-- TOGGLEMASTER_FINAL_NAV_END -->

@@ -73,3 +73,21 @@ Antes de conectar no AWS Academy:
 ## Próximo passo
 
 Criar a base Terraform local com módulos e ambiente `dev`, ainda sem conectar na AWS.
+
+<!-- TOGGLEMASTER_FINAL_NAV_START -->
+## Reprodutibilidade da Fase 3
+
+Escopo: infraestrutura cloud via Terraform/IaC usando a base dos microsserviços da Fase 2.
+
+Gerar plano sem aplicar recursos AWS:
+
+`./bootstraps/03_bootstrap_fase3.sh`
+
+Aplicar recursos AWS de forma controlada:
+
+`CONFIRM_AWS_COSTS=SIM ./bootstraps/03_bootstrap_fase3.sh`
+
+Destroy pós-entrega:
+
+`CONFIRM_DESTROY=SIM ./bootstraps/06_destroy_aws_resources.sh`
+<!-- TOGGLEMASTER_FINAL_NAV_END -->

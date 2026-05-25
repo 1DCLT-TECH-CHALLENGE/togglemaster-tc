@@ -34,3 +34,15 @@ Implementar observabilidade total e resposta ativa sobre o ecossistema ToggleMas
 
 Nenhuma implementação será considerada concluída apenas por estar configurada.
 Cada requisito precisa ser demonstrado funcionando na prática.
+
+<!-- TOGGLEMASTER_FINAL_NAV_START -->
+## Reprodutibilidade da Fase 4
+
+Escopo: observabilidade, métricas, logs, APM, alertas, incidentes, ChatOps e self-healing sobre a Fase 3.
+
+Comando principal:
+
+`NEW_RELIC_LICENSE_KEY="..." PAGERDUTY_ROUTING_KEY="..." DISCORD_WEBHOOK_URL="..." ./bootstraps/04_bootstrap_fase4.sh`
+
+Observação: secrets reais não são versionados. Integrações externas devem ser configuradas por variáveis de ambiente, Kubernetes Secrets ou mecanismo seguro equivalente.
+<!-- TOGGLEMASTER_FINAL_NAV_END -->

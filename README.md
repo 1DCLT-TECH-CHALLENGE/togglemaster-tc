@@ -81,3 +81,32 @@ Próxima etapa planejada:
 - iniciar/consolidar a Fase 3 com IaC, Terraform, GitOps e AWS Academy/LabRole;
 - manter Fase 2 como baseline local funcional;
 - não criar recursos AWS manualmente fora da automação/IaC da Fase 3.
+
+<!-- TOGGLEMASTER_FINAL_NAV_START -->
+## Navegação final e reprodutibilidade
+
+Este repositório está organizado por fases do Tech Challenge FIAP ToggleMaster.
+
+### Estrutura principal
+
+- `fase1/`: MVP monolítico local.
+- `fase2/`: cinco microsserviços locais, com Docker Compose, PostgreSQL, Redis, LocalStack, SQS local, DynamoDB local e analytics.
+- `fase3/`: infraestrutura cloud via Terraform/IaC, EKS, RDS, Redis, ECR, SQS, DynamoDB, Secrets Manager e GitOps.
+- `fase4/`: observabilidade, métricas, logs, APM, alertas, incidentes, ChatOps e self-healing.
+- `bootstraps/`: automação de preparação, reconstrução por fase, validação final e destroy AWS.
+- `_shared/docs/operacional/guia-reproducibilidade-fases.md`: guia operacional de reprodutibilidade por fase.
+- `_shared/docs/operacional/indice-final-github.md`: índice final de navegação para revisão do GitHub.
+
+### Bootstraps principais
+
+1. `./bootstraps/00_prepare_vm.sh`
+2. `./bootstraps/01_bootstrap_fase1.sh`
+3. `./bootstraps/02_bootstrap_fase2.sh`
+4. `CONFIRM_AWS_COSTS=SIM ./bootstraps/03_bootstrap_fase3.sh`
+5. `NEW_RELIC_LICENSE_KEY="..." PAGERDUTY_ROUTING_KEY="..." DISCORD_WEBHOOK_URL="..." ./bootstraps/04_bootstrap_fase4.sh`
+6. `./bootstraps/05_validate_repo_final.sh`
+
+### Pós-entrega
+
+Após a entrega da Fase 4, a infraestrutura AWS Academy foi destruída via Terraform para evitar consumo/cobrança do laboratório. O GitHub permanece como fonte de verdade do projeto.
+<!-- TOGGLEMASTER_FINAL_NAV_END -->
