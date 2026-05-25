@@ -41,10 +41,9 @@ done
 echo "OK: sintaxe shell válida."
 echo
 
-echo "5. Arquivos grandes"
-find . -type f \
-  -not -path "./.git/*" \
-  -printf "%s %p\n" \
+echo "5. Arquivos grandes versionados no Git"
+git ls-files -z \
+  | xargs -0 -r du -b \
   | sort -nr \
   | head -20 \
   | awk '{printf "%.2f MB  %s\n", $1/1024/1024, $2}'
