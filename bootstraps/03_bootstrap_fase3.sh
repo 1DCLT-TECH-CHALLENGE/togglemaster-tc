@@ -1,91 +1,126 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-BASE="${BASE:-$HOME/togglemaster-tc}"
-FASE3="$BASE/fase3"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
+cd "$ROOT"
 
-echo "============================================================"
-echo "BOOTSTRAP FASE 3 - OFFLINE / LOCAL"
-echo "============================================================"
-echo "Data: $(date)"
+section "ToggleMaster TC - Bootstrap Fase 3"
+echo "Escopo:"
+echo "- Usa a estrutura da Fase 2."
+echo "- Cria infraestrutura cloud via Terraform/IaC."
+echo "- Prepara EKS, RDS, Redis, ECR, SQS, DynamoDB, Secrets e GitOps."
+echo "- Requer AWS Academy/LabRole ativo."
 echo
+echo "Segurança:"
+echo "- Sem CONFIRM_AWS_COSTS=SIM, o script valida e gera plano."
+echo "- Com CONFIRM_AWS_COSTS=SIM, aplica Terraform e continua o fluxo cloud."
 
-cd "$BASE"
-
-echo "[1/6] Conferindo estrutura raiz"
-for dir in bootstraps _shared fase1 fase2 fase3 fase4; do
-  if [[ -d "$BASE/$dir" ]]; then
-    echo "OK: $dir"
-  else
-    echo "ERRO: diretório obrigatório ausente: $BASE/$dir"
-    exit 1
-  fi
-done
-
-echo
-echo "[2/6] Conferindo que a Fase 3 não vai recriar responsabilidades da Fase 2"
-if [[ -f "$BASE/fase2/docs/evidencias/fase2-fechamento-local.md" ]]; then
-  echo "OK: evidência de fechamento da Fase 2 encontrada."
-else
-  echo "AVISO: evidência de fechamento da Fase 2 não encontrada."
-  echo "A Fase 3 offline pode validar IaC/GitOps, mas a base da Fase 2 deve estar versionada/validada."
+if [ "${BOOTSTRAP_SKIP_PREPARE_VM:-false}" != "true" ]; then
+  run_script "$ROOT/bootstraps/00_prepare_vm.sh"
 fi
 
-echo
-echo "[3/6] Conferindo guardrails AWS"
-if env | grep -E '^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY|SESSION_TOKEN)=' >/dev/null 2>&1; then
-  echo "AVISO: variáveis AWS detectadas no ambiente."
-  echo "Este bootstrap offline NÃO usa credenciais AWS."
-else
-  echo "OK: nenhuma variável AWS detectada."
+require_cmd aws
+require_cmd terraform
+require_cmd kubectl
+require_cmd docker
+require_cmd jq
+
+section "Identidade AWS"
+aws sts get-caller-identity
+
+TF_DIR="$ROOT/fase3/terraform/environments/dev"
+require_dir "$TF_DIR"
+
+section "Terraform init, fmt, validate e plan"
+cd "$TF_DIR"
+
+terraform init -reconfigure
+terraform fmt -recursive
+terraform validate
+
+PLAN_FILE="${PLAN_FILE:-tfplan-phase3}"
+terraform plan -out="$PLAN_FILE"
+
+if [ "${CONFIRM_AWS_COSTS:-}" != "SIM" ]; then
+  section "Apply bloqueado por segurança"
+  echo "Plano gerado em: $TF_DIR/$PLAN_FILE"
+  echo
+  echo "Para criar a infraestrutura AWS:"
+  echo "CONFIRM_AWS_COSTS=SIM $ROOT/bootstraps/03_bootstrap_fase3.sh"
+  exit 0
 fi
 
-echo
-echo "[4/6] Conferindo comandos executáveis proibidos neste bootstrap"
+section "Aplicando Terraform"
+terraform apply "$PLAN_FILE"
 
-FORBIDDEN_RUNTIME_COMMANDS="$(
-  awk '
-    /^[[:space:]]*#/ { next }
-    /^[[:space:]]*echo[[:space:]]/ { next }
-    /FORBIDDEN_RUNTIME_COMMANDS/ { next }
-    /awk / { next }
-    /grep / { next }
+AWS_REGION="$(terraform output -raw aws_region 2>/dev/null || echo "${AWS_REGION:-us-east-1}")"
+CLUSTER_NAME="$(terraform output -raw eks_cluster_name)"
 
-    /^[[:space:]]*terraform[[:space:]]+(plan|apply)([[:space:]]|$)/ { print }
-    /^[[:space:]]*aws[[:space:]]+configure([[:space:]]|$)/ { print }
-    /^[[:space:]]*aws[[:space:]]+sts[[:space:]]+get-caller-identity([[:space:]]|$)/ { print }
-    /^[[:space:]]*kubectl[[:space:]]+apply([[:space:]]|$)/ { print }
-    /^[[:space:]]*helm[[:space:]]+install([[:space:]]|$)/ { print }
-  ' "$0"
-)"
+section "Atualizando kubeconfig"
+aws eks update-kubeconfig --region "$AWS_REGION" --name "$CLUSTER_NAME"
+kubectl get nodes
 
-if [[ -n "$FORBIDDEN_RUNTIME_COMMANDS" ]]; then
-  echo "ERRO: bootstrap offline contém comando executável proibido:"
-  echo "$FORBIDDEN_RUNTIME_COMMANDS"
-  exit 1
+section "Build e push das imagens para ECR"
+if [ "${BOOTSTRAP_BUILD_PUSH_IMAGES:-true}" = "true" ]; then
+  TAG="${IMAGE_TAG:-$(git -C "$ROOT" rev-parse --short HEAD)}"
+  ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+
+  aws ecr get-login-password --region "$AWS_REGION" \
+    | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+  ECR_JSON="$(terraform output -json ecr_repository_urls)"
+
+  services=(
+    "auth-service:fase2/src/services/auth-service"
+    "flag-service:fase2/src/services/flag-service"
+    "targeting-service:fase2/src/services/targeting-service"
+    "evaluation-service:fase2/src/services/evaluation-service"
+    "analytics-service:fase2/src/services/analytics-service"
+  )
+
+  cd "$ROOT"
+
+  for item in "${services[@]}"; do
+    svc="${item%%:*}"
+    path="${item#*:}"
+    repo="$(echo "$ECR_JSON" | jq -r --arg svc "$svc" '.[$svc]')"
+
+    [ "$repo" != "null" ] || fail "Repo ECR não encontrado para $svc"
+    require_dir "$ROOT/$path"
+
+    section "Build/push $svc"
+    docker build -t "$repo:$TAG" "$ROOT/$path"
+    docker push "$repo:$TAG"
+
+    manifest="$ROOT/fase3/gitops/base/${svc}.yaml"
+    if [ -f "$manifest" ]; then
+      python3 - "$manifest" "$repo:$TAG" <<'PY'
+import re
+import sys
+path = sys.argv[1]
+image = sys.argv[2]
+text = open(path, encoding="utf-8").read()
+text = re.sub(r'image:\s*["\']?[^"\'\n]+["\']?', f'image: "{image}"', text, count=1)
+open(path, "w", encoding="utf-8").write(text)
+PY
+      echo "Manifest atualizado localmente: $manifest -> $repo:$TAG"
+    fi
+  done
 else
-  echo "OK: bootstrap offline não contém comandos executáveis proibidos."
+  warn "Build/push ignorado por BOOTSTRAP_BUILD_PUSH_IMAGES=false."
 fi
 
-echo
-echo "[5/6] Executando validação offline oficial da Fase 3"
-"$FASE3/local/scripts/01_validate_phase3_offline.sh"
+section "Instalando/aplicando ArgoCD e GitOps"
+cd "$ROOT"
 
-echo
-echo "[6/6] Resumo"
-echo "Fase 3 offline validada."
-echo
-echo "Não foi executado:"
-echo "- aws configure"
-echo "- aws sts get-caller-identity"
-echo "- terraform plan"
-echo "- terraform apply"
-echo "- kubectl apply"
-echo "- helm install"
-echo "- criação de recurso AWS"
-echo "- login no AWS Academy"
+if [ "${BOOTSTRAP_INSTALL_ARGOCD:-true}" = "true" ]; then
+  kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+  kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  kubectl -n argocd rollout status deployment/argocd-server --timeout=300s || true
+fi
 
-echo
-echo "============================================================"
-echo "BOOTSTRAP FASE 3 OFFLINE FINALIZADO COM SUCESSO"
-echo "============================================================"
+kubectl apply -k fase3/gitops/apps
+
+section "Fase 3 concluída"
+echo "Infraestrutura cloud e GitOps aplicados."
+echo "Atenção: runtime secrets e credenciais temporárias do AWS Academy podem exigir scripts operacionais específicos da Fase 3."
